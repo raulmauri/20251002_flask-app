@@ -1,7 +1,9 @@
 name: Deploy
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'   # 👈 Se ejecuta SOLO cuando hagas push de un tag que empiece con "v"
 
 jobs:
   release:
