@@ -8,6 +8,9 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # Esto habilita crear releases y subir assets
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
