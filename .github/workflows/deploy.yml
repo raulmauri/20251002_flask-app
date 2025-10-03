@@ -1,29 +1,41 @@
-name: Deploy
+name: Deploy Release
 
 on:
   push:
     tags:
-      - 'v*'   # 👈 Se ejecuta SOLO cuando hagas push de un tag que empiece con "v"
+      - "v*.*.*"   # se ejecuta cuando subes un tag con formato semver
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write   # Esto habilita crear releases y subir assets
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Create ZIP artifact
-        run: zip -r flask-app.zip . -x "*.git*"
+      # Empaquetamos el proyecto en un zip
+      - name: Create project archive
+        run: |
+          zip -r flask-app.zip . -x "*.git*"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: "Flask App Release"
-          tag_name: "v1.0.${{ github.run_number }}"
-          body: "Release automático generado por GitHub Actions"
-          files: flask-app.zip
+      # Crear release en GitHub
+      - name: Creando Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}     # usa el nombre del tag que disparó el workflow
+          release_name: "Release ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+
+      # Subir el asset (zip del proyecto)
+      - name: Subiendo Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./flask-app.zip
+          asset_name: flask-app.zip
+          asset_content_type: application/zip
